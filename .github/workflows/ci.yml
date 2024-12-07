@@ -26,11 +26,11 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: Install dependencies
-        uses: go mod download
+        run: go mod download
 
       - name: Run tests
-        uses: go test -v ./...
+        run: go test -v ./...
 
       - name: Run build
-        uses: go build -v ./...
+        run: go build -v ./...
 

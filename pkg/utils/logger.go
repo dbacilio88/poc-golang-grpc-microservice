@@ -65,10 +65,10 @@ func LoggerConfiguration(level string) (*zap.Logger, error) {
 		EncodeDuration: zapcore.SecondsDurationEncoder,   // Duración en segundos
 		EncodeCaller:   zapcore.FullCallerEncoder,        // Información completa de la llamada
 	}
-	jsonEncoder := zapcore.NewJSONEncoder(encoderConfig)
+	//jsonEncoder := zapcore.NewJSONEncoder(encoderConfig)
 	encoder := zapcore.NewConsoleEncoder(encoderConfig)
 
-	filename := fmt.Sprintf("/logs/%s-%s.log", yaml.YAML.Server.Name, yaml.YAML.Server.Environment)
+	filename := fmt.Sprintf("/%s/%s-%s.log", yaml.YAML.Server.Logs, yaml.YAML.Server.Name, yaml.YAML.Server.Environment)
 
 	logLumberjack := &lumberjack.Logger{
 		Filename:   filename,
@@ -79,7 +79,7 @@ func LoggerConfiguration(level string) (*zap.Logger, error) {
 		MaxAge:     30,
 	}
 
-	fileCore := zapcore.NewCore(jsonEncoder, zapcore.AddSync(logLumberjack), log)
+	fileCore := zapcore.NewCore(encoder, zapcore.AddSync(logLumberjack), log)
 	consoleCore := zapcore.NewCore(encoder, zapcore.Lock(os.Stdout), log)
 
 	Core = zapcore.NewTee(

@@ -46,6 +46,7 @@ type Server struct {
 	Timeout     int    `mapstructure:"timeout" yaml:"timeout"`
 	Logging     string `mapstructure:"logging" yaml:"logging"`
 	Environment string `mapstructure:"environment" yaml:"environment"`
+	Logs        string `mapstructure:"logs" yaml:"logs"`
 }
 
 type Ssh struct {

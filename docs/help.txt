@@ -1,0 +1,11 @@
+USE DATABASE SQL OR GORM
+
+SQL: SQLX,SQLC[https://github.com/sqlc-dev/sqlc?tab=readme-ov-file]
+user sqlc:
+install: for linux [sudo snap install sqlc]
+sqlc init visit for configuration yaml https://docs.sqlc.dev/en/stable/reference/config.html
+
+
+TEST>
+testify: https://github.com/stretchr/testify
+GORM:

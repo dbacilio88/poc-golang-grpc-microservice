@@ -1,9 +1,9 @@
 package router
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"time"
@@ -28,6 +28,7 @@ import (
  */
 
 type GorillaRouter struct {
+	log          *zap.Logger
 	router       *mux.Router
 	middleware   *negroni.Negroni
 	port         Port
@@ -37,8 +38,9 @@ type GorillaRouter struct {
 	idleTimeout  time.Duration
 }
 
-func newGorillaRouter(port Port, name Name) *GorillaRouter {
+func newGorillaRouter(port Port, name Name, log *zap.Logger) *GorillaRouter {
 	return &GorillaRouter{
+		log:        log,
 		router:     mux.NewRouter(),
 		middleware: negroni.New(),
 		port:       port,
@@ -49,11 +51,10 @@ func newGorillaRouter(port Port, name Name) *GorillaRouter {
 func (r *GorillaRouter) Run() {
 	r.router.HandleFunc("/health", healthCheckHandlerMux)
 	r.middleware.UseHandler(r.router)
-	listenAndServe(r.port, r.name, r.middleware)
+	listenAndServe(r.port, r.name, r.middleware, r.log)
 }
 
 func healthCheckHandlerMux(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("request from ", r.URL.Path)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, err := io.WriteString(w, `{"alive": true}`)

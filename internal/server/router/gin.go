@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/urfave/negroni"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -26,6 +27,7 @@ import (
  */
 
 type GinFramework struct {
+	log          *zap.Logger
 	router       *gin.Engine
 	middleware   *negroni.Negroni
 	port         Port
@@ -35,8 +37,9 @@ type GinFramework struct {
 	idleTimeout  time.Duration
 }
 
-func newGinFramework(port Port, name Name) *GinFramework {
+func newGinFramework(port Port, name Name, log *zap.Logger) *GinFramework {
 	return &GinFramework{
+		log:        log,
 		router:     gin.Default(),
 		middleware: negroni.New(),
 		port:       port,
@@ -47,7 +50,7 @@ func newGinFramework(port Port, name Name) *GinFramework {
 func (f *GinFramework) Run() {
 	f.router.GET("/health", healthCheckHandlerGin)
 	f.middleware.UseHandler(f.router)
-	listenAndServe(f.port, f.name, f.middleware)
+	listenAndServe(f.port, f.name, f.middleware, f.log)
 }
 
 func healthCheckHandlerGin(c *gin.Context) {

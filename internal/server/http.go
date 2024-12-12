@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/dbacilio88/golang-grpc-email-microservice/internal/server/router"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -24,21 +25,23 @@ import (
  */
 
 type HttpConfig struct {
-	factory router.ServerFactory
+	log     *zap.Logger
+	factory router.IServerFactory
 	port    router.Port
 	name    router.Name
 	timeout time.Duration
 }
 
-func NewHttpConfig() *HttpConfig {
+func NewHttpConfig(log *zap.Logger) *HttpConfig {
 	return &HttpConfig{
+		log:     log,
 		timeout: time.Second * 10,
 	}
 }
 
 func (c *HttpConfig) NewHttpServer(instance int) *HttpConfig {
 	factory, err := router.NewRouterFactory(
-		instance, c.port, c.name)
+		instance, c.port, c.name, c.log)
 
 	if err != nil {
 		return nil

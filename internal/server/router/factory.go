@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/urfave/negroni"
+	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/signal"
@@ -38,38 +39,41 @@ const InstanceRouterGorilla = 1
 const NameRouterGin string = "Gin"
 const NameRouterGorilla string = "Gorilla Mux"
 
-type ServerFactory interface {
+type ServerFactory struct {
+	log *zap.Logger
+}
+
+type IServerFactory interface {
 	Run()
 }
 
-func NewRouterFactory(instance int, port Port, name Name) (ServerFactory, error) {
+func NewRouterFactory(instance int, port Port, name Name, log *zap.Logger) (IServerFactory, error) {
+
 	switch instance {
 	case InstanceRouterGin:
-		return newGinFramework(port, name), nil
+		return newGinFramework(port, name, log), nil
 	case InstanceRouterGorilla:
-		return newGorillaRouter(port, name), nil
+		return newGorillaRouter(port, name, log), nil
 	default:
 		return nil, errors.New("invalid instance")
 	}
 }
 
-func listenAndServe(port Port, name Name, middleware *negroni.Negroni) {
+func listenAndServe(port Port, name Name, middleware *negroni.Negroni, log *zap.Logger) {
 	srv := createHttpServer(port, middleware)
-
-	stop := setupSignalHandler()
+	stop := setupSignalHandler(log)
 
 	go func() {
-		fmt.Printf("start http server %s on %d\n", name, port)
+		log.Info(fmt.Sprintf("Starting http server on port %d [%s]...", port, name))
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			fmt.Println("http server listen error", err)
+			log.Error("error starting http server", zap.Error(err))
 			return
 		}
 	}()
 
 	// Esperar a recibir una señal
 	<-stop
-
-	fmt.Println("shutting down http server...")
+	log.Info("shutting down http server", zap.Int("port", int(port)))
 	// Establece un tiempo límite para la parada del servidor.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
@@ -77,10 +81,10 @@ func listenAndServe(port Port, name Name, middleware *negroni.Negroni) {
 
 	// Intenta cerrar el servidor de manera ordenada.
 	if err := srv.Shutdown(ctx); err != nil {
-		fmt.Println("http server shutdown error", err)
+		log.Error("error shutting down http server", zap.Error(err))
 	}
 
-	fmt.Println("http server shutdown successfully")
+	log.Info("shutting down http server", zap.Int("port", int(port)))
 }
 
 func createHttpServer(port Port, middleware *negroni.Negroni) *http.Server {
@@ -92,7 +96,7 @@ func createHttpServer(port Port, middleware *negroni.Negroni) *http.Server {
 }
 
 // SetupSignalHandler configura el manejo de señales para una parada controlada.
-func setupSignalHandler() (quitOs <-chan struct{}) {
+func setupSignalHandler(log *zap.Logger) (quitOs <-chan struct{}) {
 
 	quit := make(chan struct{})
 	// Canal para recibir señales del sistema
@@ -102,11 +106,11 @@ func setupSignalHandler() (quitOs <-chan struct{}) {
 	go func() {
 		// Espera la primera señal y cierra el canal `stop`.
 		next := <-s
-		fmt.Println("caught signal next", next)
+		log.Info("Caught signal; shutting down...", zap.Any("signal", next))
 		close(quit)
 		// Espera una segunda señal para terminar inmediatamente.
 		next = <-s
-		fmt.Println("caught signal next", next)
+		log.Info("Caught signal next; shutting down...", zap.Any("signal", next))
 		os.Exit(1)
 	}()
 	return quit

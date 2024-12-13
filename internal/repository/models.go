@@ -16,3 +16,10 @@ type Email struct {
 	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type Transaction struct {
+	ID        int64     `json:"id"`
+	EmailID   int64     `json:"email_id"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+}

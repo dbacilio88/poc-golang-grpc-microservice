@@ -1,0 +1,58 @@
+name: Run unit tests
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+
+jobs:
+  test:
+    name: Test
+    strategy:
+      matrix:
+        go-version: [ '1.23.x' ]
+        platform: [ ubuntu-latest ]
+    runs-on: ${{ matrix.platform }}
+    services:
+      postgres:
+        image: postgres:14.15-alpine3.21
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: secret
+          POSTGRES_USER: root
+          POSTGRES_DB: go-postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Display Go version
+        run: go version
+
+      - name: Install golang-migrate
+        run: |
+          curl -s https://packagecloud.io/install/repositories/golang-migrate/migrate/script.deb.sh | sudo bash
+          ls -la
+          sudo apt-get install migrate=4.18.1
+          migrate -version
+      - name: Run migrations
+        run: make migrate_up
+
+      - name: Run tests
+        #run: go test -v ./...
+        run: make test

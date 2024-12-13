@@ -2,23 +2,23 @@ update:
 	go get -u all
 
 postgres:
-	docker run --name postgres12 -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:12-alpine
+	docker run --name go-postgres -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:14.15-alpine3.21
 
-create_bd:
-	docker exec -it postgres12 createdb --username=root --owner=root name_database
+create_db:
+	docker exec -it go-postgres createdb --username=root --owner=root go-postgres
 
-drop_bd:
-	docker exec -it postgres12 dropdb name_database
+drop_db:
+	docker exec -it go-postgres dropdb go-postgres
 
 migrate_up:
-	 migrate -path workspace/database/migration -database "postgresql://postgres:Hos5XoBdI2ps9V1alhCd@db-golang-postgresql.clck2ieqa8u0.us-east-1.rds.amazonaws.com:5432/postgres" -verbose up
+	 migrate -path workspace/database/migration -database "postgresql://root:secret@localhost:5432/go-postgres?sslmode=disable" -verbose up
 
 migrate_down:
-	 migrate -path workspace/database/migration -database "postgresql://postgres:Hos5XoBdI2ps9V1alhCd@db-golang-postgresql.clck2ieqa8u0.us-east-1.rds.amazonaws.com:5432/postgres" -verbose down -all
+	 migrate -path workspace/database/migration -database "postgresql://root:secret@localhost:5432/go-postgres?sslmode=disable" -verbose down -all
 
 sqlc:
 	sqlc generate -f workspace/database/sqlc.yaml
 
 test:
 	go test -v -cover ./...
-.PHONY: update postgres create_bd drop_bd migrate_up migrate_down test
+.PHONY: update postgres create_db drop_db migrate_up migrate_down test

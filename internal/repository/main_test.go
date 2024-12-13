@@ -29,7 +29,7 @@ import (
 
 const (
 	driverName      = "postgres"
-	datasSourceName = "postgresql://postgres:Hos5XoBdI2ps9V1alhCd@db-golang-postgresql.clck2ieqa8u0.us-east-1.rds.amazonaws.com:5432/postgres"
+	datasSourceName = "postgresql://root:secret@localhost:5432/go-postgres?sslmode=disable"
 )
 
 var testQueries *Queries

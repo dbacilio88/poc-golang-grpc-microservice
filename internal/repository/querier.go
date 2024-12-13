@@ -10,9 +10,12 @@ import (
 
 type Querier interface {
 	CreateEmail(ctx context.Context, arg CreateEmailParams) (Email, error)
+	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error)
 	DeleteBook(ctx context.Context, id int64) error
 	GetEmail(ctx context.Context, id int64) (Email, error)
+	GetTransaction(ctx context.Context, id int64) (Transaction, error)
 	ListEmails(ctx context.Context, arg ListEmailsParams) ([]Email, error)
+	ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]Transaction, error)
 	UpdateEmail(ctx context.Context, arg UpdateEmailParams) (Email, error)
 }
 

@@ -1,3 +1,5 @@
+install migrate: https://packagecloud.io/golang-migrate
+
 USE DATABASE SQL OR GORM
 
 SQL: SQLX,SQLC[https://github.com/sqlc-dev/sqlc?tab=readme-ov-file]
@@ -5,7 +7,27 @@ user sqlc:
 install: for linux [sudo snap install sqlc]
 sqlc init visit for configuration yaml https://docs.sqlc.dev/en/stable/reference/config.html
 
+overrides: https://docs.sqlc.dev/en/stable/howto/overrides.html
+data type: https://docs.sqlc.dev/en/stable/reference/datatypes.html
+example sqlc.yaml: https://github.com/sqlc-dev/sqlc/blob/main/examples/authors/sqlc.yaml
 
 TEST>
 testify: https://github.com/stretchr/testify
 GORM:
+
+
+
+TRANSACCIONES EN BASE DE DATOS:
+¿POR QUÉ NECESITAMOS USAR TRANSACCIONES DE BASE DE DATOS?
+RAZONES PRINCIPALES:
+- Que nuestra unidad de trabajo sea fiable y coherente en caso de fallas del sistema
+- Proporcionar aislamiento entre los programas que acceden a la base de datos de forma concurrente
+
+ATOMICIDAD (ATOMICITY) A
+Las transacciones se tratan como una única unidad de trabajo, por lo que si alguna parte falla, se revierte toda la transacción.
+AISLAMIENTO (ISOLATION) I
+Las transacciones ocurren de forma independiente sin interferir entre sí, por lo que pueden ocurrir múltiples transacciones al mismo tiempo sin que la base de datos sea inconsistente.
+CONSISTENCIA (CONSISTENCY) C
+Una transacción mueve la base de datos de un estado válido a otro, por lo que si la base de datos es consistente antes de una transacción, seguirá siendo consistente después.
+DURABILIDAD (DURABILITY) D
+Los cambios realizados por una transacción ejecutada exitosamente se guardan, incluso si el sistema falla.

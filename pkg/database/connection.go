@@ -1,18 +1,18 @@
-package repository
+package database
 
 import (
 	"database/sql"
+	"github.com/dbacilio88/golang-grpc-email-microservice/internal/repository"
+	"github.com/dbacilio88/golang-grpc-email-microservice/pkg/yaml"
 	_ "github.com/lib/pq"
 	"log"
-	"os"
-	"testing"
 )
 
 /**
 *
-* main_test
+* connection
 * <p>
-* main_test file
+* connection file
 *
 * Copyright (c) 2024 All rights reserved.
 *
@@ -23,27 +23,24 @@ import (
 *
 * @author christian
 * @author dbacilio88@outlook.es
-* @since 12/12/2024
+* @since 14/12/2024
 *
  */
 
-const (
-	driverName      = "postgres"
-	datasSourceName = "postgresql://root:secret@localhost:5432/postgres?sslmode=disable"
-)
+type Connection struct {
+	*repository.Store
+}
 
-var testQueries *Queries
-var testDb *sql.DB
+type IConnection interface {
+}
 
-func TestMain(m *testing.M) {
-	var err error
-	testDb, err = sql.Open(driverName, datasSourceName)
+func NewConnection() *Connection {
+	open, err := sql.Open(yaml.YAML.Database.Driver, yaml.GetUriDatasource())
 	if err != nil {
-		log.Fatal("Error connecting to database:")
-		return
+		log.Fatal("Error connecting to database:", err)
+		return nil
 	}
-
-	testQueries = New(testDb)
-
-	os.Exit(m.Run())
+	return &Connection{
+		repository.NewStore(open),
+	}
 }

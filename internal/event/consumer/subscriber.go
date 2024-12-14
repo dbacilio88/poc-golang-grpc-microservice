@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-amqp/v2/pkg/amqp"
+	"go.uber.org/zap"
 )
 
 /**
@@ -26,27 +27,30 @@ import (
  */
 
 type BrokerSubscriber struct {
+	*zap.Logger
 }
 
 type IBrokerSubscriber interface {
-	SubscriberRabbitMq() (*amqp.Subscriber, error)
+	SubscriberRabbitMq(cfg amqp.Config) (*amqp.Subscriber, error)
 	SubscriberKafkaMq() error
 }
 
-func NewBrokerSubscriber() *BrokerSubscriber {
-	return &BrokerSubscriber{}
+func NewBrokerSubscriber(log *zap.Logger) IBrokerSubscriber {
+	return &BrokerSubscriber{
+		Logger: log,
+	}
 }
 
 func (b *BrokerSubscriber) SubscriberRabbitMq(cfg amqp.Config) (*amqp.Subscriber, error) {
 	sub, err := amqp.NewSubscriber(cfg, watermill.NewStdLogger(false, false))
 	if err != nil {
-		fmt.Println("Error creating subscriber:", err)
+		b.Error("Error creating subscriber", zap.Error(err))
 		return nil, err
 	}
 	return sub, nil
 }
 
 func (b *BrokerSubscriber) SubscriberKafkaMq() error {
-	fmt.Println("Kafka subscription is not implemented yet.")
+	b.Info("Kafka subscription is not implemented yet.")
 	return fmt.Errorf("kafka subscription is not implemented yet")
 }

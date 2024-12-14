@@ -107,7 +107,7 @@ func TestQueries_ListEmails(t *testing.T) {
 	param := ListEmailsParams{
 		Status: emailNew.Status,
 		Limit:  5,
-		Offset: 5,
+		Offset: 1,
 	}
 
 	emails, err := testQueries.ListEmails(context.Background(), param)

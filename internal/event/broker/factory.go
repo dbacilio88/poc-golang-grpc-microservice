@@ -28,13 +28,15 @@ import (
 const RabbitMqInstance int = iota
 const KafkaMqInstance = 1
 
-type BrokersFactory interface {
+type BrokersFactory struct{}
+
+type IBrokersFactory interface {
 	Subscribe()
 	Publish(data []byte) error
 	LoadConfiguration()
 }
 
-func NewBrokerFactory(log *zap.Logger, instance int) (BrokersFactory, error) {
+func NewBrokerFactory(log *zap.Logger, instance int) (IBrokersFactory, error) {
 	switch instance {
 	case RabbitMqInstance:
 		return NewRabbitMq(log, &yaml.YAML.Rabbitmq), nil

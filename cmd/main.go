@@ -55,8 +55,8 @@ func main() {
 
 	app := server.NewHttpConfig(log).
 		SetPort(yaml.YAML.Server.Port).
-		SetName(router.NameRouterGorilla).
-		NewHttpServer(router.InstanceRouterGorilla)
+		SetName(router.NameRouterGin).
+		NewHttpServer(router.InstanceRouterGin)
 
 	// start instance server http
 	app.Start()

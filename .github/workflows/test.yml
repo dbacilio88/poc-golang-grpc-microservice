@@ -10,6 +10,7 @@ on:
     branches:
       - master
       - develop
+      - 'feature/**'
 
 jobs:
   test:
@@ -49,10 +50,11 @@ jobs:
         run: |
           curl -s https://packagecloud.io/install/repositories/golang-migrate/migrate/script.deb.sh | sudo bash
           ls -la
-          sudo apt-get install migrate=4.18.1
+          sudo apt-get install -y migrate=4.18.1
           migrate -version
       - name: Run migrations
         run: make migrate_up
+        continue-on-error: false
 
       - name: Run tests
         #run: go test -v ./...

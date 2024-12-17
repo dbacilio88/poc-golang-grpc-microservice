@@ -29,6 +29,11 @@ type BrokerConfig struct {
 	*zap.Logger
 }
 
+type IBrokerConfig interface {
+	BrokerSubscriber()
+	BrokerPublisher(data []byte) error
+}
+
 func NewBrokerConfig(log *zap.Logger) *BrokerConfig {
 	return &BrokerConfig{
 		Logger: log,
@@ -44,12 +49,11 @@ func (b *BrokerConfig) NewBrokerServer(instance int) *BrokerConfig {
 	return b
 }
 
-func (b *BrokerConfig) Subscriber() {
+func (b *BrokerConfig) BrokerSubscriber() {
 	b.Subscribe()
-
 }
 
-func (b *BrokerConfig) Publisher(data []byte) error {
+func (b *BrokerConfig) BrokerPublisher(data []byte) error {
 	err := b.Publish(data)
 	if err != nil {
 		b.Error("Error publishing", zap.Error(err))

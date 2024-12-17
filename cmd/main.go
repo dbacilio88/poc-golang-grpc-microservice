@@ -46,7 +46,7 @@ func main() {
 		NewBrokerServer(broker.RabbitMqInstance)
 
 	//go routine subscriber instance rabbit or kafka
-	go msg.Subscriber()
+	go msg.BrokerSubscriber()
 
 	//create instance task
 	tsk := task.NewTask(log)

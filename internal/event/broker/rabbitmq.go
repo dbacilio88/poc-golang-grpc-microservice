@@ -33,56 +33,55 @@ import (
  */
 
 type RabbitMq struct {
-	config     amqp.Config
-	subscriber *consumer.BrokerSubscriber
-	publisher  *producer.BrokerPublisher
-	log        *zap.Logger
-	parameters yaml.IParameterBroker
+	amqp.Config
+	*zap.Logger
+	yaml.IParameterBroker
+	subscriber consumer.IBrokerSubscriber
+	publisher  producer.IBrokerPublisher
 }
 
 type IRabbitMq interface {
-	SubscriberService() (<-chan *message.Message, error)
+	SubscriberService(ctx context.Context, topic string) (<-chan *message.Message, error)
 	PublisherService(topic string, data []byte) error
-	Close() error
 }
 
 func NewRabbitMq(log *zap.Logger, parameters yaml.IParameterBroker) *RabbitMq {
 	return &RabbitMq{
-		log:        log,
-		subscriber: consumer.NewBrokerSubscriber(),
-		publisher:  producer.NewBrokerPublisher(),
-		parameters: parameters,
+		Logger:           log,
+		subscriber:       consumer.NewBrokerSubscriber(log),
+		publisher:        producer.NewBrokerPublisher(log),
+		IParameterBroker: parameters,
 	}
 }
 
 func (r *RabbitMq) SubscriberService(ctx context.Context, topic string) (<-chan *message.Message, error) {
-	r.log.Info("Subscribing RabbitMq to topic...", zap.String("topic", topic))
-	sub, err := r.subscriber.SubscriberRabbitMq(r.config)
+	r.Info("Subscribing RabbitMq to topic...", zap.String("topic", topic))
+	sub, err := r.subscriber.SubscriberRabbitMq(r.Config)
 	if err != nil {
 		return nil, err
 	}
 	subscribe, err := sub.Subscribe(ctx, topic)
 	if err != nil {
-		r.log.Error("Error subscribing to RabbitMq", zap.Error(err))
+		r.Error("Error subscribing to RabbitMq", zap.Error(err))
 		return nil, err
 	}
-	r.log.Info("RabbitMq subscribed", zap.String("topic", topic))
+	r.Info("RabbitMq subscribed", zap.String("topic", topic))
 	return subscribe, nil
 }
 
 func (r *RabbitMq) PublisherService(topic string, data []byte) error {
-	r.log.Info("Publishing RabbitMq to topic...", zap.String("topic", topic))
-	pub, err := r.publisher.PublisherRabbitMq(r.config)
+	r.Info("Publishing RabbitMq to topic...", zap.String("topic", topic))
+	pub, err := r.publisher.PublisherRabbitMq(r.Config)
 	if err != nil {
 		return err
 	}
 	msg := message.NewMessage(watermill.NewULID(), data)
 	err = pub.Publish(topic, msg)
 	if err != nil {
-		r.log.Error("Error publishing message in RabbitMq", zap.Error(err))
+		r.Error("Error publishing message in RabbitMq", zap.Error(err))
 		return err
 	}
-	r.log.Info("RabbitMq published message", zap.String("topic", topic))
+	r.Info("RabbitMq published message", zap.String("topic", topic))
 	return nil
 }
 
@@ -93,7 +92,7 @@ func (r *RabbitMq) Subscribe() {
 
 	service, err := r.SubscriberService(ctx, "service.app.go.transaction.request")
 	if err != nil {
-		r.log.Error("Error creating service: ", zap.Error(err))
+		r.Error("Error creating service: ", zap.Error(err))
 		return
 	}
 
@@ -108,25 +107,25 @@ func (r *RabbitMq) Subscribe() {
 
 	// Procesamiento de los mensajes
 	for msg := range msgChannel {
-		r.log.Info("Received message from RabbitMq", zap.String("message", string(msg.Payload)))
+		r.Info("Received message from RabbitMq", zap.String("message", string(msg.Payload)))
 		msg.Ack()
 	}
 
-	r.log.Info("Process broker rabbitmq started")
+	r.Info("Process broker rabbitmq started")
 }
 
 func (r *RabbitMq) Publish(data []byte) error {
 	r.LoadConfiguration()
 	err := r.PublisherService("service.app.go.transaction.request", data)
 	if err != nil {
-		r.log.Error("Error publishing message", zap.Error(err))
+		r.Error("Error publishing message", zap.Error(err))
 		return err
 	}
 	return nil
 }
 
 func (r *RabbitMq) LoadConfiguration() {
-	r.log.Info("Loading configuration for RabbitMq...")
+	r.Info("Loading configuration for RabbitMq...")
 	cfg := amqp.Config{
 		Connection:      r.loadConnectionConfig(),
 		Exchange:        r.loadExchangeConfig(),
@@ -143,15 +142,15 @@ func (r *RabbitMq) LoadConfiguration() {
 	}
 	cfg.Connection.TLSConfig = tlsCfg
 
-	r.config = cfg
-	r.log.Info("Configuration Loaded")
+	r.Config = cfg
+	r.Info("Configuration Loaded")
 }
 
 func (r *RabbitMq) loadConnectionConfig() amqp.ConnectionConfig {
 	return amqp.ConnectionConfig{
-		AmqpURI: r.parameters.GetUri(),
+		AmqpURI: r.GetUri(),
 		AmqpConfig: &amqp091.Config{
-			Vhost: r.parameters.GetVhost(),
+			Vhost: r.GetVhost(),
 		},
 		Reconnect: amqp.DefaultReconnectConfig(),
 	}
@@ -160,7 +159,7 @@ func (r *RabbitMq) loadConnectionConfig() amqp.ConnectionConfig {
 func (r *RabbitMq) loadExchangeConfig() amqp.ExchangeConfig {
 	return amqp.ExchangeConfig{
 		GenerateName: func(topic string) string {
-			return r.parameters.GetExchange()
+			return r.GetExchange()
 		},
 		Type:    "topic",
 		Durable: true,
@@ -179,7 +178,7 @@ func (r *RabbitMq) loadExchangeConfig() amqp.ExchangeConfig {
 func (r *RabbitMq) loadQueueConfig() amqp.QueueConfig {
 	return amqp.QueueConfig{
 		GenerateName: func(topic string) string {
-			return r.parameters.GetQueueName()
+			return r.GetQueueName()
 		},
 		Durable: true,
 		//Exclusive:  false,
@@ -195,7 +194,7 @@ func (r *RabbitMq) loadQueueConfig() amqp.QueueConfig {
 func (r *RabbitMq) loadQueueBindConfig() amqp.QueueBindConfig {
 	return amqp.QueueBindConfig{
 		GenerateRoutingKey: func(topic string) string {
-			return r.parameters.GetRoutingKey()
+			return r.GetRoutingKey()
 		},
 	}
 }

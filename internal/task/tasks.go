@@ -61,7 +61,7 @@ func (t *Task) Run(task *tasks.Scheduler) {
 		RunSingleInstance: false,
 		TaskFunc: func() error {
 			fmt.Println("Run task")
-			err := t.broker.Publisher([]byte("hola mundo"))
+			err := t.broker.BrokerPublisher([]byte("hola mundo"))
 			if err != nil {
 				t.log.Error("Error publishing message", zap.Error(err))
 				return err

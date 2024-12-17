@@ -1,11 +1,11 @@
 package router
 
 import (
+	"github.com/dbacilio88/golang-grpc-email-microservice/internal/handler"
 	"github.com/gin-gonic/gin"
 	"github.com/urfave/negroni"
 	"go.uber.org/zap"
 	"net/http"
-	"time"
 )
 
 /**
@@ -27,28 +27,30 @@ import (
  */
 
 type GinFramework struct {
-	log          *zap.Logger
-	router       *gin.Engine
-	middleware   *negroni.Negroni
-	port         Port
-	name         Name
-	readTimeout  time.Duration
-	writeTimeout time.Duration
-	idleTimeout  time.Duration
+	log        *zap.Logger
+	router     *gin.Engine
+	middleware *negroni.Negroni
+	port       Port
+	name       Name
+	h          handler.IEmailHandler
 }
 
 func newGinFramework(port Port, name Name, log *zap.Logger) *GinFramework {
+	han := handler.NewEmailHandler()
 	return &GinFramework{
 		log:        log,
 		router:     gin.Default(),
 		middleware: negroni.New(),
 		port:       port,
 		name:       name,
+		h:          han,
 	}
 }
 
 func (f *GinFramework) Run() {
+
 	f.router.GET("/health", healthCheckHandlerGin)
+	f.router.GET("/emails", f.h.GetEmailsHandler)
 	f.middleware.UseHandler(f.router)
 	listenAndServe(f.port, f.name, f.middleware, f.log)
 }

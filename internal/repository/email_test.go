@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/dbacilio88/golang-grpc-email-microservice/pkg/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -107,11 +108,12 @@ func TestQueries_ListEmails(t *testing.T) {
 	param := ListEmailsParams{
 		Status: emailNew.Status,
 		Limit:  5,
-		Offset: 5,
+		Offset: 1,
 	}
+	fmt.Println(param)
 
 	emails, err := testQueries.ListEmails(context.Background(), param)
-
+	fmt.Println(len(emails))
 	require.NoError(t, err)
 	require.Len(t, emails, 5)
 

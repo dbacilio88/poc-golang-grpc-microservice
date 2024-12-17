@@ -68,10 +68,12 @@ type Scheduler struct {
 
 type Database struct {
 	Host     string `mapstructure:"host" yaml:"host"`
-	Port     string `mapstructure:"port" yaml:"port"`
+	Port     int    `mapstructure:"port" yaml:"port"`
 	User     string `mapstructure:"user" yaml:"user"`
 	Password string `mapstructure:"password" yaml:"password"`
 	Dbname   string `mapstructure:"db_name" yaml:"db_name"`
+	Driver   string `mapstructure:"driver" yaml:"driver"`
+	IsTest   bool   `mapstructure:"is_test" yaml:"is_test"`
 }
 
 type Rabbitmq struct {
@@ -125,6 +127,16 @@ type IParameterBroker interface {
 	GetQueueName() string
 	GetRoutingKey() string
 	GetExchange() string
+}
+
+func GetUriDatasource() string {
+	return fmt.Sprintf("%s://%s:%s@%s:%d/%s?sslmode=disable",
+		YAML.Database.Driver,
+		YAML.Database.User,
+		YAML.Database.Password,
+		YAML.Database.Host,
+		YAML.Database.Port,
+		YAML.Database.Dbname)
 }
 
 func (r *Rabbitmq) GetUri() string {

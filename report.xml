@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+	<testsuite tests="9" failures="9" time="0.006" name="github.com/dbacilio88/golang-grpc-email-microservice/internal/repository">
+		<properties>
+			<property name="go.version" value="go1.23.4"></property>
+		</properties>
+		<testcase classname="repository" name="TestQueries_CreateEmail" time="0.000">
+			<failure message="Failed" type="">    email_test.go:39: </failure>
+		</testcase>
+		<testcase classname="repository" name="TestQueries_GetEmail" time="0.000">
+			<failure message="Failed" type="">    email_test.go:39: </failure>
+		</testcase>
+		<testcase classname="repository" name="TestQueries_UpdateEmail" time="0.000">
+			<failure message="Failed" type="">    email_test.go:39: </failure>
+		</testcase>
+		<testcase classname="repository" name="TestQueries_DeleteBook" time="0.000">
+			<failure message="Failed" type="">    email_test.go:39: </failure>
+		</testcase>
+		<testcase classname="repository" name="TestQueries_ListEmails" time="0.000">
+			<failure message="Failed" type="">    email_test.go:39: </failure>
+		</testcase>
+		<testcase classname="repository" name="TestStore_TransactionTx" time="0.000">
+			<failure message="Failed" type="">    email_test.go:39: </failure>
+		</testcase>
+		<testcase classname="repository" name="TestQueries_CreateTransaction" time="0.000">
+			<failure message="Failed" type="">    email_test.go:39: </failure>
+		</testcase>
+		<testcase classname="repository" name="TestQueries_GetTransaction" time="0.000">
+			<failure message="Failed" type="">    email_test.go:39: </failure>
+		</testcase>
+		<testcase classname="repository" name="TestQueries_ListTransactions" time="0.000">
+			<failure message="Failed" type="">    email_test.go:39: </failure>
+		</testcase>
+	</testsuite>
+</testsuites>

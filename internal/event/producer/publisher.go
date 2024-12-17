@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-amqp/v2/pkg/amqp"
+	"go.uber.org/zap"
 )
 
 /**
@@ -26,27 +27,30 @@ import (
  */
 
 type BrokerPublisher struct {
+	*zap.Logger
 }
 
 type IBrokerPublisher interface {
-	PublisherRabbitMq() (*amqp.Publisher, error)
+	PublisherRabbitMq(cfg amqp.Config) (*amqp.Publisher, error)
 	PublisherKafkaMq() error
 }
 
-func NewBrokerPublisher() *BrokerPublisher {
-	return &BrokerPublisher{}
+func NewBrokerPublisher(log *zap.Logger) IBrokerPublisher {
+	return &BrokerPublisher{
+		Logger: log,
+	}
 }
 
 func (b *BrokerPublisher) PublisherRabbitMq(cfg amqp.Config) (*amqp.Publisher, error) {
 	pub, err := amqp.NewPublisher(cfg, watermill.NewStdLogger(false, false))
 	if err != nil {
-		fmt.Println("Error creating publisher", err)
+		b.Error("Error creating publisher", zap.Error(err))
 		return nil, err
 	}
 	return pub, nil
 }
 
 func (b *BrokerPublisher) PublisherKafkaMq() error {
-	fmt.Println("Kafka publishing is not implemented yet.")
+	b.Info("Kafka publishing is not implemented yet.")
 	return fmt.Errorf("kafka publishing not implemented yet")
 }

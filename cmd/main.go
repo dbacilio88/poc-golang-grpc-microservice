@@ -46,7 +46,7 @@ func main() {
 		NewBrokerServer(broker.RabbitMqInstance)
 
 	//go routine subscriber instance rabbit or kafka
-	go msg.Subscriber()
+	go msg.BrokerSubscriber()
 
 	//create instance task
 	tsk := task.NewTask(log)
@@ -55,8 +55,8 @@ func main() {
 
 	app := server.NewHttpConfig(log).
 		SetPort(yaml.YAML.Server.Port).
-		SetName(router.NameRouterGorilla).
-		NewHttpServer(router.InstanceRouterGorilla)
+		SetName(router.NameRouterGin).
+		NewHttpServer(router.InstanceRouterGin)
 
 	// start instance server http
 	app.Start()

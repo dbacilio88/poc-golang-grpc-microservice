@@ -25,33 +25,38 @@ import (
  */
 
 type BrokerConfig struct {
-	factory broker.BrokersFactory
-	log     *zap.Logger
+	broker.IBrokersFactory
+	*zap.Logger
+}
+
+type IBrokerConfig interface {
+	BrokerSubscriber()
+	BrokerPublisher(data []byte) error
 }
 
 func NewBrokerConfig(log *zap.Logger) *BrokerConfig {
 	return &BrokerConfig{
-		log: log,
+		Logger: log,
 	}
 }
 
 func (b *BrokerConfig) NewBrokerServer(instance int) *BrokerConfig {
-	factory, err := broker.NewBrokerFactory(b.log, instance)
+	factory, err := broker.NewBrokerFactory(b.Logger, instance)
 	if err != nil {
 		return nil
 	}
-	b.factory = factory
+	b.IBrokersFactory = factory
 	return b
 }
 
-func (b *BrokerConfig) Subscriber() {
-	b.factory.Subscribe()
+func (b *BrokerConfig) BrokerSubscriber() {
+	b.Subscribe()
 }
 
-func (b *BrokerConfig) Publisher(data []byte) error {
-	err := b.factory.Publish(data)
+func (b *BrokerConfig) BrokerPublisher(data []byte) error {
+	err := b.Publish(data)
 	if err != nil {
-		b.log.Error("Error publishing", zap.Error(err))
+		b.Error("Error publishing", zap.Error(err))
 		return err
 	}
 	return nil

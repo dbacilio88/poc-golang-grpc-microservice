@@ -38,7 +38,7 @@ type ITask interface {
 	Run(task *tasks.Scheduler)
 }
 
-func NewTask(log *zap.Logger) *Task {
+func NewTask(log *zap.Logger) ITask {
 
 	eb := event.NewBrokerConfig(log).
 		NewBrokerServer(broker.RabbitMqInstance)
@@ -56,7 +56,7 @@ func (t *Task) Create() *tasks.Scheduler {
 func (t *Task) Run(task *tasks.Scheduler) {
 	t.log.Info("Run new task")
 	tsk := &tasks.Task{
-		Interval:          time.Minute * 3,
+		Interval:          time.Minute * 1,
 		RunOnce:           false,
 		RunSingleInstance: false,
 		TaskFunc: func() error {

@@ -31,8 +31,6 @@ import (
 var Core zapcore.Core
 var instance *zap.Logger
 
-type RequestIdKey struct{}
-
 func LoggerConfiguration(level string) (*zap.Logger, error) {
 
 	mapLevel := map[string]zapcore.Level{
@@ -65,7 +63,7 @@ func LoggerConfiguration(level string) (*zap.Logger, error) {
 		EncodeDuration: zapcore.SecondsDurationEncoder,   // Duración en segundos
 		EncodeCaller:   zapcore.FullCallerEncoder,        // Información completa de la llamada
 	}
-	//jsonEncoder := zapcore.NewJSONEncoder(encoderConfig)
+
 	encoder := zapcore.NewConsoleEncoder(encoderConfig)
 
 	filename := fmt.Sprintf("/%s/%s-%s.log", yaml.YAML.Server.Logs, yaml.YAML.Server.Name, yaml.YAML.Server.Environment)

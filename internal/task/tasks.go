@@ -1,11 +1,12 @@
 package task
 
 import (
-	"fmt"
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/event"
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/event/broker"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/internal/service"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/pkg/shared/store"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/pkg/utils"
 	"github.com/madflojo/tasks"
 	"go.uber.org/zap"
+	"path/filepath"
 	"time"
 )
 
@@ -29,57 +30,62 @@ import (
  */
 
 type Task struct {
-	broker *event.BrokerConfig
-	log    *zap.Logger
+	*zap.Logger
+	utils.IFiles
 }
 
 type ITask interface {
 	Create() *tasks.Scheduler
-	Run(task *tasks.Scheduler)
+	Run(task *tasks.Scheduler, ws string, msg service.IMessaging)
 }
 
 func NewTask(log *zap.Logger) ITask {
-
-	eb := event.NewBrokerConfig(log).
-		NewBrokerServer(broker.RabbitMqInstance)
-
+	//eb := event.NewBrokerConfig(log).NewBrokerServer(broker.RabbitMqInstance)
+	memory := store.NewMemory()
+	files := utils.NewFiles(log, memory)
 	return &Task{
-		log:    log,
-		broker: eb,
+		Logger: log,
+		IFiles: files,
+		//	broker: eb,
 	}
 }
 
 func (t *Task) Create() *tasks.Scheduler {
-	t.log.Info("Create new task")
+	t.Info("Create new task")
 	return tasks.New()
 }
-func (t *Task) Run(task *tasks.Scheduler) {
-	t.log.Info("Run new task")
+func (t *Task) Run(task *tasks.Scheduler, ws string, msg service.IMessaging) {
+	t.Info("Run new task")
 	tsk := &tasks.Task{
 		Interval:          time.Minute * 1,
 		RunOnce:           false,
 		RunSingleInstance: false,
 		TaskFunc: func() error {
-			fmt.Println("Run task")
-			err := t.broker.BrokerPublisher([]byte("hola mundo"))
-			if err != nil {
-				t.log.Error("Error publishing message", zap.Error(err))
+			var err error
+			if err = t.IFiles.GenerateFile(); err != nil {
 				return err
 			}
-
-			return nil
+			//err := t.broker.BrokerPublisher([]byte("hola mundo"))
+			//if err != nil {
+			//	t.log.Error("Error publishing message", zap.Error(err))
+			//	return err
+			//	}
+			abs, err := filepath.Abs(ws)
+			err = t.IFiles.ScanDir(abs, msg)
+			return err
 		},
 		ErrFunc: func(err error) {
-			t.log.Error("Error task", zap.Error(err))
+			t.Info("Error task ", zap.Error(err))
+			//t.Error("Error task", zap.Error(err))
 		},
 	}
 
 	add, err := task.Add(tsk)
 
 	if err != nil {
-		t.log.Error("Error adding task", zap.Error(err))
+		t.Error("Error adding task", zap.Error(err))
 		return
 	} else {
-		t.log.Info("Added task", zap.Any("add", add))
+		t.Info("Added task", zap.Any("add", add))
 	}
 }

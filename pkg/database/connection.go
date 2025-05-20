@@ -2,10 +2,10 @@ package database
 
 import (
 	"database/sql"
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/repository"
-	"github.com/dbacilio88/golang-grpc-email-microservice/pkg/yaml"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/internal/repository"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/pkg/env"
 	_ "github.com/lib/pq"
-	"log"
+	"go.uber.org/zap"
 )
 
 /**
@@ -29,18 +29,20 @@ import (
 
 type Connection struct {
 	*repository.Store
+	*zap.Logger
 }
 
 type IConnection interface {
 }
 
-func NewConnection() *Connection {
-	open, err := sql.Open(yaml.YAML.Database.Driver, yaml.GetUriDatasource())
+func NewConnection(log *zap.Logger) *Connection {
+	open, err := sql.Open(env.YAML.Database.Driver, env.YAML.Database.GetUrl())
 	if err != nil {
-		log.Fatal("Error connecting to database:", err)
+		log.Error("Error connecting to database ", zap.Error(err))
 		return nil
 	}
 	return &Connection{
-		repository.NewStore(open),
+		Store:  repository.NewStore(open),
+		Logger: log,
 	}
 }

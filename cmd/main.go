@@ -1,15 +1,14 @@
 package main
 
 import (
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/event"
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/event/broker"
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/server"
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/server/router"
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/task"
-	"github.com/dbacilio88/golang-grpc-email-microservice/pkg/utils"
-	"github.com/dbacilio88/golang-grpc-email-microservice/pkg/yaml"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/internal/event/broker"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/internal/server"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/internal/server/router"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/internal/service"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/internal/task"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/pkg/env"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/pkg/utils"
 	"go.uber.org/zap"
-	"time"
 )
 
 /**
@@ -32,36 +31,51 @@ import (
 
 func main() {
 
-	yaml.LoadProperties()
+	message := env.LoadProperties()
 
-	log, err := utils.LoggerConfiguration(yaml.YAML.Server.Environment)
+	log, err := utils.LoggerConfiguration(env.YAML.Server.Environment)
+
 	if err != nil {
 		return
 	}
 
+	log.Info(message)
+
 	std := zap.RedirectStdLog(log)
 	defer std()
 
-	msg := event.NewBrokerConfig(log).
+	//go routine subscriber [producer] instance rabbit or kafka
+	msg := service.NewMessaging(log, env.YAML).
 		NewBrokerServer(broker.RabbitMqInstance)
 
-	//go routine subscriber instance rabbit or kafka
-	go msg.BrokerSubscriber()
+	params := map[string]interface{}{
+		"queueName":  env.YAML.Rabbitmq.Queue.Files.Name,
+		"routingKey": env.YAML.Rabbitmq.RoutingKey.Files,
+	}
 
-	//create instance task
+	go msg.Receive(params)
+
+	//msg := event.NewBrokerConfig(log).
+	//	NewBrokerServer(broker.RabbitMqInstance)
+	//go msg.BrokerSubscriber()
+
+	// instance new task
 	tsk := task.NewTask(log)
+	// create instance task pending read file data
 	scheduler := tsk.Create()
-	tsk.Run(scheduler)
+	if env.YAML.Scheduler.Enable {
+		tsk.Run(scheduler, env.YAML.Workspace.Files.Path, msg)
+	}
 
 	app := server.NewHttpConfig(log).
-		SetPort(yaml.YAML.Server.Port).
-		SetName(router.NameRouterGin).
-		NewHttpServer(router.InstanceRouterGin)
+		SetPort(env.YAML.Server.Port).
+		SetName(router.NameRouterGorilla).
+		NewHttpServer(router.InstanceRouterGorilla)
 
 	// start instance server http
 	app.Start()
 
-	time.Sleep(1 * time.Second)
-	//select {}
+	//time.Sleep(1 * time.Second)
+	select {}
 
 }

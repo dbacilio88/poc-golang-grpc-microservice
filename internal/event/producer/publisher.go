@@ -26,13 +26,13 @@ import (
 *
  */
 
-type BrokerPublisher struct {
-	*zap.Logger
+type IBrokerPublisher interface {
+	PublisherRabbitMq(config amqp.Config) (*amqp.Publisher, error)
+	PublisherKafkaMq() error
 }
 
-type IBrokerPublisher interface {
-	PublisherRabbitMq(cfg amqp.Config) (*amqp.Publisher, error)
-	PublisherKafkaMq() error
+type BrokerPublisher struct {
+	*zap.Logger
 }
 
 func NewBrokerPublisher(log *zap.Logger) IBrokerPublisher {
@@ -41,8 +41,8 @@ func NewBrokerPublisher(log *zap.Logger) IBrokerPublisher {
 	}
 }
 
-func (b *BrokerPublisher) PublisherRabbitMq(cfg amqp.Config) (*amqp.Publisher, error) {
-	pub, err := amqp.NewPublisher(cfg, watermill.NewStdLogger(false, false))
+func (b *BrokerPublisher) PublisherRabbitMq(config amqp.Config) (*amqp.Publisher, error) {
+	pub, err := amqp.NewPublisher(config, watermill.NewStdLogger(false, false))
 	if err != nil {
 		b.Error("Error creating publisher", zap.Error(err))
 		return nil, err

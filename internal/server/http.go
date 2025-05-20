@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/server/router"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/internal/server/router"
 	"go.uber.org/zap"
 	"time"
 )

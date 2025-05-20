@@ -1,7 +1,7 @@
 package router
 
 import (
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/handler"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/internal/handler"
 	"github.com/gin-gonic/gin"
 	"github.com/urfave/negroni"
 	"go.uber.org/zap"
@@ -36,7 +36,7 @@ type GinFramework struct {
 }
 
 func newGinFramework(port Port, name Name, log *zap.Logger) *GinFramework {
-	han := handler.NewEmailHandler()
+	han := handler.NewEmailHandler(log)
 	return &GinFramework{
 		log:        log,
 		router:     gin.Default(),

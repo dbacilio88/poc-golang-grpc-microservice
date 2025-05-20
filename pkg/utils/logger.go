@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"github.com/dbacilio88/golang-grpc-email-microservice/pkg/yaml"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/pkg/env"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -52,22 +52,25 @@ func LoggerConfiguration(level string) (*zap.Logger, error) {
 	log := zap.NewAtomicLevelAt(levelValue)
 
 	encoderConfig := zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		MessageKey:     "msg",
-		StacktraceKey:  "stacktrace",
+		TimeKey:       "time",
+		LevelKey:      "level",
+		NameKey:       "logger",
+		MessageKey:    "msg",
+		StacktraceKey: "stacktrace",
+		CallerKey:     "caller",
+
+		EncodeName:     zapcore.FullNameEncoder,
 		LineEnding:     zapcore.DefaultLineEnding,
 		EncodeLevel:    zapcore.CapitalColorLevelEncoder, // Usar colores
 		EncodeTime:     zapcore.ISO8601TimeEncoder,       // Formato ISO8601 para el tiempo
 		EncodeDuration: zapcore.SecondsDurationEncoder,   // Duración en segundos
-		EncodeCaller:   zapcore.FullCallerEncoder,        // Información completa de la llamada
+		EncodeCaller:   zapcore.ShortCallerEncoder,       // Información completa de la llamada
 	}
 
 	encoder := zapcore.NewConsoleEncoder(encoderConfig)
 
-	filename := fmt.Sprintf("/%s/%s-%s.log", yaml.YAML.Server.Logs, yaml.YAML.Server.Name, yaml.YAML.Server.Environment)
-
+	filename := fmt.Sprintf("/%s/%s-%s.log", env.YAML.Server.Logs, env.YAML.Server.Name, env.YAML.Server.Environment)
+	fmt.Println(filename)
 	logLumberjack := &lumberjack.Logger{
 		Filename:   filename,
 		MaxSize:    10,
@@ -83,17 +86,17 @@ func LoggerConfiguration(level string) (*zap.Logger, error) {
 	Core = zapcore.NewTee(
 		fileCore.With(
 			[]zap.Field{
-				zap.String("app", yaml.YAML.Server.Name),
-				zap.String("env", yaml.YAML.Server.Environment),
+				zap.String("app", env.YAML.Server.Name),
+				zap.String("env", env.YAML.Server.Environment),
 			},
 		),
 
 		consoleCore.With(
 			[]zap.Field{
-				zap.String("app", yaml.YAML.Server.Name),
-				zap.String("env", yaml.YAML.Server.Environment),
+				zap.String("app", env.YAML.Server.Name),
+				zap.String("env", env.YAML.Server.Environment),
 			}),
 	)
-	instance = zap.New(Core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+	instance = zap.New(Core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel), zap.Development())
 	return instance, nil
 }

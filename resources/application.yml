@@ -1,0 +1,55 @@
+database:
+    db_name: postgres
+    driver: postgres
+    host: localhost
+    is_test: false
+    password: secret
+    port: 5432
+    user: root
+rabbitmq:
+    binding:
+        email: NOTIFICATION.TRANSACTION.EMAIL
+        files: LOAD.TRANSACTION.FILES
+    exchange:
+        durable: true
+        name: TOPIC.EXCHANGE.TRANSACTION
+        types: topic
+    host: chimpanzee.rmq.cloudamqp.com
+    password: zElK2mebvAeI7DcfMF-QzohdZvl_a9zS
+    port: 5672
+    protocol: amqp
+    queue:
+        email:
+            durable: false
+            message_ttl: 6000
+            name: QU-NOTIFICATION-EMAIL
+            types: quorum
+        files:
+            durable: false
+            message_ttl: 6000
+            name: QU-LOAD-FILES
+            types: quorum
+    routing_key:
+        email: NOTIFICATION.TRANSACTION.EMAIL
+        files: LOAD.TRANSACTION.FILES
+    tls_enabled: true
+    user: fmxxffqw
+    vhost: fmxxffqw
+scheduler:
+    enable: true
+server:
+    environment: dev
+    host: localhost
+    logging: dev
+    logs: info
+    name: go-server
+    port: 8080
+    timeout: 5000
+workspace:
+    files:
+        allowed:
+            - .TXT
+            - .txt
+        path: ./workspace/data
+        received: ./workspace/tmp
+    path: ./workspace

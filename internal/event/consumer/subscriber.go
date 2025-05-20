@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-amqp/v2/pkg/amqp"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/pkg/env/mq"
 	"go.uber.org/zap"
 )
 
@@ -26,23 +27,25 @@ import (
 *
  */
 
-type BrokerSubscriber struct {
-	*zap.Logger
-}
-
 type IBrokerSubscriber interface {
-	SubscriberRabbitMq(cfg amqp.Config) (*amqp.Subscriber, error)
+	SubscriberRabbitMq(config amqp.Config) (*amqp.Subscriber, error)
 	SubscriberKafkaMq() error
 }
 
-func NewBrokerSubscriber(log *zap.Logger) IBrokerSubscriber {
+type BrokerSubscriber struct {
+	*zap.Logger
+	mq.Rabbitmq
+}
+
+func NewBrokerSubscriber(log *zap.Logger, prop mq.Rabbitmq) IBrokerSubscriber {
 	return &BrokerSubscriber{
-		Logger: log,
+		Logger:   log,
+		Rabbitmq: prop,
 	}
 }
 
-func (b *BrokerSubscriber) SubscriberRabbitMq(cfg amqp.Config) (*amqp.Subscriber, error) {
-	sub, err := amqp.NewSubscriber(cfg, watermill.NewStdLogger(false, false))
+func (b *BrokerSubscriber) SubscriberRabbitMq(config amqp.Config) (*amqp.Subscriber, error) {
+	sub, err := amqp.NewSubscriber(config, watermill.NewStdLogger(false, false))
 	if err != nil {
 		b.Error("Error creating subscriber", zap.Error(err))
 		return nil, err

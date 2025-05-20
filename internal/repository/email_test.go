@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/dbacilio88/golang-grpc-email-microservice/pkg/test"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/pkg/test"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"

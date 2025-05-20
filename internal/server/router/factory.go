@@ -48,7 +48,6 @@ type IServerFactory interface {
 }
 
 func NewRouterFactory(instance int, port Port, name Name, log *zap.Logger) (IServerFactory, error) {
-
 	switch instance {
 	case InstanceRouterGin:
 		return newGinFramework(port, name, log), nil
@@ -61,7 +60,6 @@ func NewRouterFactory(instance int, port Port, name Name, log *zap.Logger) (ISer
 
 func listenAndServe(port Port, name Name, middleware *negroni.Negroni, log *zap.Logger) {
 	srv := createHttpServer(port, middleware)
-	stop := setupSignalHandler(log)
 
 	go func() {
 		log.Info(fmt.Sprintf("Starting http server on port %d [%s]...", port, name))
@@ -71,20 +69,20 @@ func listenAndServe(port Port, name Name, middleware *negroni.Negroni, log *zap.
 		}
 	}()
 
-	// Esperar a recibir una señal
+	stop := setupSignalHandler(log)
+	// stop o shutdown server
 	<-stop
 	log.Info("shutting down http server", zap.Int("port", int(port)))
-	// Establece un tiempo límite para la parada del servidor.
+	// Set a time limit for the server to stop.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-
 	defer cancel()
-
-	// Intenta cerrar el servidor de manera ordenada.
+	// Try to shut down the server in an orderly manner.
 	if err := srv.Shutdown(ctx); err != nil {
+		//error shutdown
 		log.Error("error shutting down http server", zap.Error(err))
 	}
+	os.Exit(0)
 
-	log.Info("shutting down http server", zap.Int("port", int(port)))
 }
 
 func createHttpServer(port Port, middleware *negroni.Negroni) *http.Server {
@@ -95,23 +93,27 @@ func createHttpServer(port Port, middleware *negroni.Negroni) *http.Server {
 	return srv
 }
 
-// SetupSignalHandler configura el manejo de señales para una parada controlada.
+// SetupSignalHandler configures signal handling for a controlled stop.
 func setupSignalHandler(log *zap.Logger) (quitOs <-chan struct{}) {
 
 	quit := make(chan struct{})
-	// Canal para recibir señales del sistema
-	s := make(chan os.Signal, 1)
-	signal.Notify(s, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	// Channel to receive signals from the system
+	s := make(chan os.Signal, 2)
+	//	Interrupt Signal = syscall.SIGINT
+	//	Kill      Signal = syscall.SIGKILL
+
+	//signal.Notify(s, os.Interrupt, os.Kill, syscall.SIGTERM)
+	//signal.Notify(s, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(s, os.Interrupt, syscall.SIGKILL)
 
 	go func() {
-		// Espera la primera señal y cierra el canal `stop`.
+		// Wait for the first signal and close the `stop` channel.
 		next := <-s
 		log.Info("Caught signal; shutting down...", zap.Any("signal", next))
 		close(quit)
-		// Espera una segunda señal para terminar inmediatamente.
+		// Wait for a second signal to finish immediately.
 		next = <-s
 		log.Info("Caught signal next; shutting down...", zap.Any("signal", next))
-		os.Exit(1)
 	}()
 	return quit
 }

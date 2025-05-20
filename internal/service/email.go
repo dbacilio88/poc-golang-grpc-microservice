@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/models"
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/repository"
-	"github.com/dbacilio88/golang-grpc-email-microservice/pkg/database"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/internal/models"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/internal/repository"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/pkg/database"
+	"go.uber.org/zap"
 	"log"
 )
 
@@ -28,6 +29,7 @@ import (
  */
 
 type EmailService struct {
+	*zap.Logger
 	*database.Connection
 }
 
@@ -37,9 +39,10 @@ type IEmailService interface {
 	GetEmailsService(ctx context.Context) ([]models.CreateEmailResponse, error)
 }
 
-func NewEmailService() IEmailService {
+func NewEmailService(log *zap.Logger) IEmailService {
 	return &EmailService{
-		database.NewConnection(),
+		Logger:     log,
+		Connection: database.NewConnection(log),
 	}
 }
 func (e *EmailService) GetEmailsService(ctx context.Context) ([]models.CreateEmailResponse, error) {

@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/models"
-	"github.com/dbacilio88/golang-grpc-email-microservice/internal/service"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/internal/models"
+	"github.com/dbacilio88/poc-golang-grpc-microservice/internal/service"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"log"
 	"net/http"
 )
@@ -28,7 +29,8 @@ import (
  */
 
 type EmailHandler struct {
-	emailService service.IEmailService
+	es service.IEmailService
+	*zap.Logger
 }
 
 type IEmailHandler interface {
@@ -37,15 +39,16 @@ type IEmailHandler interface {
 	GetEmailsHandler(ctx *gin.Context)
 }
 
-func NewEmailHandler() IEmailHandler {
-	srv := service.NewEmailService()
+func NewEmailHandler(log *zap.Logger) IEmailHandler {
+	srv := service.NewEmailService(log)
 	return &EmailHandler{
-		emailService: srv,
+		Logger: log,
+		es:     srv,
 	}
 }
 
 func (e *EmailHandler) GetEmailsHandler(ctx *gin.Context) {
-	emailsService, err := e.emailService.GetEmailsService(ctx)
+	emailsService, err := e.es.GetEmailsService(ctx)
 	if err != nil {
 		log.Fatal("Error getting emails:")
 		return
@@ -59,7 +62,7 @@ func (e *EmailHandler) CreateEmailHandler(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	emailService, err := e.emailService.CreateEmailService(ctx, request)
+	emailService, err := e.es.CreateEmailService(ctx, request)
 	if err != nil {
 		return
 	}
